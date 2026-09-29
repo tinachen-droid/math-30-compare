@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30以內的數比大小 - 魔法數學大闖關</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Google Fonts for Cute Typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'M PLUS Rounded 1c', 'Microsoft JhengHei', sans-serif;
+            background-color: #FFF9F2;
+            background-image: radial-gradient(#FFD8A8 1.5px, transparent 1.5px);
+            background-size: 24px 24px;
+        }
+
+        /* Cute Card Styles */
+        .cute-card {
+            background: #FFFFFF;
+            border: 4px solid #FFE3E3;
+            box-shadow: 0 10px 0px #FFD1D1;
+            border-radius: 28px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        /* Interactive Option Buttons */
+        .option-btn {
+            background: #FFFFFF;
+            border: 3.5px solid #E2E8F0;
+            box-shadow: 0 6px 0px #CBD5E1;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+            user-select: none;
+        }
+
+        .option-btn:hover:not(.disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 9px 0px #CBD5E1;
+            border-color: #94A3B8;
+        }
+
+        .option-btn:active:not(.disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0px #CBD5E1;
+        }
+
+        /* Selected State */
+        .option-btn.selected {
+            background-color: #FEF3C7 !important;
+            border-color: #F59E0B !important;
+            box-shadow: 0 6px 0px #D97706 !important;
+            transform: translateY(-2px);
+        }
+
+        /* Correct & Incorrect States for Review */
+        .option-btn.correct-ans {
+            background-color: #D1FAE5 !important;
+            border-color: #10B981 !important;
+            box-shadow: 0 6px 0px #059669 !important;
+            color: #065F46 !important;
+        }
+
+        .option-btn.wrong-ans {
+            background-color: #FEE2E2 !important;
+            border-color: #EF4444 !important;
+            box-shadow: 0 6px 0px #DC2626 !important;
+            color: #991B1B !important;
+        }
+
+        .submit-btn {
+            background: #10B981;
+            color: white;
+            border: 4px solid #059669;
+            box-shadow: 0 8px 0px #047857;
+            border-radius: 24px;
+            transition: all 0.15s ease;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0px #047857;
+            background: #34D399;
+        }
+
+        .submit-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 4px 0px #047857;
+        }
+
+        .reset-btn {
+            background: #6366F1;
+            color: white;
+            border: 4px solid #4F46E5;
+            box-shadow: 0 8px 0px #3730A3;
+            border-radius: 24px;
+            transition: all 0.15s ease;
+        }
+
+        .reset-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 11px 0px #3730A3;
+            background: #818CF8;
+        }
+
+        .reset-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 4px 0px #3730A3;
+        }
+
+        /* Irregular Scatter Container & Items */
+        .scatter-box {
+            position: relative;
+            min-height: 180px;
+            background-color: #FAF5FF;
+            border: 2px dashed #D8B4FE;
+            border-radius: 20px;
+            padding: 12px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            justify-content: center;
+            gap: 6px;
+            overflow: hidden;
+        }
+
+        .scatter-item {
+            display: inline-block;
+            transition: transform 0.2s ease;
+            user-select: none;
+            line-height: 1.2;
+        }
+
+        .scatter-item:hover {
+            transform: scale(1.35) rotate(12deg) !important;
+            z-index: 10;
+        }
+
+        /* Badge Tag */
+        .q-badge {
+            background: #FF8E8E;
+            color: white;
+            padding: 6px 18px;
+            border-radius: 16px;
+            font-weight: 800;
+            font-size: 1.125rem;
+            box-shadow: 0 4px 0px #E55B5B;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-16 pt-6 px-4 flex flex-col items-center justify-start text-gray-800">
+
+    <!-- Header Title Banner -->
+    <header class="w-full max-w-3xl text-center mb-8">
+        <div class="inline-block bg-amber-100 border-4 border-amber-300 rounded-3xl p-4 sm:p-6 shadow-lg transform -rotate-1 mb-2">
+            <h1 class="text-3xl sm:text-4xl font-black text-amber-900 tracking-wide flex items-center justify-center gap-2">
+                <span>🎒</span> 30以內的數比大小 <span>✨</span>
+            </h1>
+            <p class="text-amber-800 font-bold text-base sm:text-lg mt-2">
+                數數看、比比看，選出正確答案！做完按「結算」送出喔！
+            </p>
+        </div>
+    </header>
+
+    <!-- Main Quiz Container -->
+    <main id="quiz-container" class="w-full max-w-3xl space-y-8">
+        <!-- Question Cards will be injected dynamically via JS -->
+    </main>
+
+    <!-- Action Bar / Results Panel -->
+    <section class="w-full max-w-3xl mt-10 flex flex-col items-center justify-center">
+        <!-- Submit Button -->
+        <button id="submit-btn" onclick="submitAnswers()" class="submit-btn text-2xl font-black py-4 px-10 flex items-center gap-3">
+            <span>📝</span> 寫好了，送出結算！
+        </button>
+
+        <!-- Result Card (Hidden by default) -->
+        <div id="result-card" class="hidden cute-card w-full mt-6 p-6 sm:p-8 text-center bg-yellow-50 border-amber-300 transform transition-all duration-300">
+            <div id="result-title" class="text-3xl font-black mb-3 text-amber-800">🎉 太棒了！結算成績</div>
+            
+            <div class="flex items-center justify-center gap-2 my-4">
+                <span class="text-2xl font-bold text-gray-700">你的得分：</span>
+                <span id="score-display" class="text-5xl font-black text-rose-500 bg-white px-6 py-2 rounded-2xl border-4 border-rose-300 shadow-inner">3 / 3</span>
+            </div>
+
+            <p id="result-feedback" class="text-lg font-bold text-gray-700 mb-6">
+                全對！你是數學小達人！🌟
+            </p>
+
+            <button onclick="resetQuiz()" class="reset-btn text-xl font-black py-3 px-8 inline-flex items-center gap-2">
+                <span>🔄</span> 再挑戰一次（換新題目）
+            </button>
+        </div>
+    </section>
+
+    <script>
+
+        // Distinct Pairs of Items for Question 2
+        const EMOJI_PAIRS = [
+            { a: { name: "蘋果", char: "🍎" }, b: { name: "香蕉", char: "🍌" } },
+            { a: { name: "草莓", char: "🍓" }, b: { name: "葡萄", char: "🍇" } },
+            { a: { name: "狗狗", char: "🐶" }, b: { name: "貓咪", char: "🐱" } },
+            { a: { name: "兔子", char: "🐰" }, b: { name: "熊熊", char: "🐻" } },
+            { a: { name: "胡蘿蔔", char: "🥕" }, b: { name: "玉米", char: "🌽" } },
+            { a: { name: "甜甜圈", char: "🍩" }, b: { name: "杯子蛋糕", char: "🧁" } },
+            { a: { name: "汽車", char: "🚗" }, b: { name: "積木", char: "🧱" } },
+            { a: { name: "企鵝", char: "🐧" }, b: { name: "小鴨", char: "🐥" } }
+        ];
+
+        // Question 3 Scenarios with visual metadata
+        const SCENARIOS = [
+            { actorName: "小朋友", actorIcon: "👦", itemName: "蘋果", itemIcon: "🍎" },
+            { actorName: "小兔兔", actorIcon: "🐰", itemName: "胡蘿蔔", itemIcon: "🥕" },
+            { actorName: "小學生", actorIcon: "🎒", itemName: "鉛筆", itemIcon: "✏️" },
+            { actorName: "小狗狗", actorIcon: "🐶", itemName: "骨頭", itemIcon: "🦴" },
+            { actorName: "小貓咪", actorIcon: "🐱", itemName: "魚罐頭", itemIcon: "🥫" },
+            { actorName: "小猴子", actorIcon: "🐒", itemName: "香蕉", itemIcon: "🍌" },
+            { actorName: "小熊熊", actorIcon: "🐻", itemName: "蜂蜜罐", itemIcon: "🍯" }
+        ];
+
+        let questionsData = [];
+        let userAnswers = [null, null, null];
+        let isSubmitted = false;
+
+
+        // Utility: Random Integer between min and max (inclusive)
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        // Utility: Generate two distinct numbers within range [1, 30]
+        function getTwoUniqueNumbers(min = 1, max = 30) {
+            let num1 = getRandomInt(min, max);
+            let num2 = getRandomInt(min, max);
+            while (num1 === num2) {
+                num2 = getRandomInt(min, max);
+            }
+            return [num1, num2];
+        }
+
+        // Utility: Generate two distinct numbers with a small difference (1 to 5)
+        function getTwoCloseUniqueNumbers(min = 1, max = 30, minDiff = 1, maxDiff = 5) {
+            let num1 = getRandomInt(min, max);
+            let diff = getRandomInt(minDiff, maxDiff);
+            let num2;
+            if (num1 + diff <= max && num1 - diff >= min) {
+                num2 = Math.random() < 0.5 ? num1 + diff : num1 - diff;
+            } else if (num1 + diff <= max) {
+                num2 = num1 + diff;
+            } else {
+                num2 = num1 - diff;
+            }
+            return [num1, num2];
+        }
+
+        function generateQuestions() {
+            questionsData = [];
+            userAnswers = [null, null, null];
+            isSubmitted = false;
+
+            // --- 題型一：純數字比大小 ---
+            const [num1_Q1, num2_Q1] = getTwoUniqueNumbers(1, 30);
+            const isQ1AskBigger = Math.random() < 0.5; // Randomly ask "Bigger" or "Smaller"
+            const q1Correct = isQ1AskBigger 
+                ? (num1_Q1 > num2_Q1 ? num1_Q1 : num2_Q1)
+                : (num1_Q1 < num2_Q1 ? num1_Q1 : num2_Q1);
+
+            questionsData.push({
+                type: 1,
+                title: "題型一：純數字比大小",
+                prompt: `請比較下面的兩個數字，哪一個數字比較<span class="text-rose-600 font-black text-2xl underline decoration-wavy decoration-rose-400">${isQ1AskBigger ? "大" : "小"}</span>？`,
+                options: [num1_Q1, num2_Q1],
+                correctAnswer: q1Correct,
+                explanation: `${num1_Q1} 和 ${num2_Q1} 比較，比較${isQ1AskBigger ? "大" : "小"}的是【${q1Correct}】。`
+            });
+
+            // --- 題型二：兩種圖案不規則散落數量比大小 (隱藏數字、選圖案，相差1~5個) ---
+            const [countA, countB] = getTwoCloseUniqueNumbers(1, 30, 1, 5);
+            const isQ2AskMore = Math.random() < 0.5; // Randomly ask "More" or "Fewer"
+            const pair = EMOJI_PAIRS[getRandomInt(0, EMOJI_PAIRS.length - 1)];
+            
+            // Correct answer: 'A' (item A) or 'B' (item B)
+            const q2Correct = isQ2AskMore
+                ? (countA > countB ? 'A' : 'B')
+                : (countA < countB ? 'A' : 'B');
+
+            const correctItemObj = q2Correct === 'A' ? pair.a : pair.b;
+
+            questionsData.push({
+                type: 2,
+                title: "題型二：圖案數量比大小",
+                prompt: `數數看，下面哪一種圖案的數量比較<span class="text-rose-600 font-black text-2xl underline decoration-wavy decoration-rose-400">${isQ2AskMore ? "多" : "少"}</span>？`,
+                itemA: pair.a,
+                itemB: pair.b,
+                countA: countA,
+                countB: countB,
+                options: [
+                    { label: `${pair.a.char} ${pair.a.name}`, value: 'A' },
+                    { label: `${pair.b.char} ${pair.b.name}`, value: 'B' }
+                ],
+                correctAnswer: q2Correct,
+                explanation: `${pair.a.char} ${pair.a.name}有 ${countA} 個，${pair.b.char} ${pair.b.name}有 ${countB} 個。數量比較${isQ2AskMore ? "多" : "少"}的是【${correctItemObj.char} ${correctItemObj.name}】。`
+            });
+
+            // --- 題型三：夠不夠情境題 (含圖文對照情境卡，相差1~5個) ---
+            const [kids, items] = getTwoCloseUniqueNumbers(1, 30, 1, 5);
+            const scenario = SCENARIOS[getRandomInt(0, SCENARIOS.length - 1)];
+            // items >= kids -> 夠 ('enough'), else -> 不夠 ('not_enough')
+            const q3Correct = items >= kids ? 'enough' : 'not_enough';
+
+            questionsData.push({
+                type: 3,
+                title: "題型三：夠不夠情境題",
+                scenario: scenario,
+                kidsCount: kids,
+                itemsCount: items,
+                prompt: `請看下方的圖卡：有 <span class="text-indigo-600 text-2xl font-black">${kids}</span> 位 ${scenario.actorName} ${scenario.actorIcon}，每人發 1 個 ${scenario.itemName} ${scenario.itemIcon}。<br>桌上有 <span class="text-indigo-600 text-2xl font-black">${items}</span> 個 ${scenario.itemName}，請問<span class="text-rose-600 font-black text-2xl underline decoration-wavy decoration-rose-400">${scenario.itemName}夠不夠？</span>`,
+                options: [
+                    { label: "夠", value: 'enough' },
+                    { label: "不夠", value: 'not_enough' }
+                ],
+                correctAnswer: q3Correct,
+                explanation: `${kids} 位 ${scenario.actorName} 需要 ${kids} 個 ${scenario.itemName}，現在有 ${items} 個 ${scenario.itemName}。${items} ${items >= kids ? '≥' : '<'} ${kids}，所以【${items >= kids ? '夠' : '不夠'}】。`
+            });
+        }
+
+
+        function renderQuestions() {
+            const container = document.getElementById("quiz-container");
+            container.innerHTML = "";
+
+            questionsData.forEach((q, index) => {
+                const card = document.createElement("div");
+                card.className = "cute-card p-5 sm:p-7 relative";
+                card.id = `question-card-${index}`;
+
+                let innerHTML = `
+                    <div class="flex items-center justify-between mb-4 border-b-2 border-dashed border-pink-200 pb-3">
+                        <span class="q-badge">第 ${index + 1} 題</span>
+                        <span class="text-gray-400 font-bold text-sm sm:text-base">${q.title}</span>
+                    </div>
+                    <div class="text-lg sm:text-xl font-bold text-gray-800 leading-relaxed mb-6">
+                        ${q.prompt}
+                    </div>
+                `;
+
+                // Render specific layout based on Question Type
+                if (q.type === 1) {
+                    // Type 1: Large Number Buttons
+                    innerHTML += `
+                        <div class="grid grid-cols-2 gap-4 sm:gap-6 my-4">
+                            ${q.options.map((num) => `
+                                <button onclick="selectOption(${index}, ${num})" 
+                                        id="opt-${index}-${num}" 
+                                        class="option-btn py-6 text-4xl sm:text-5xl font-black text-amber-900 text-center">
+                                    ${num}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (q.type === 2) {
+                    // Type 2: Irregular Scatter Boxes without showing numbers!
+                    innerHTML += `
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <!-- Item A Box -->
+                            <div class="bg-amber-50/80 border-2 border-amber-300 rounded-2xl p-4 flex flex-col items-center">
+                                <div class="font-extrabold text-amber-900 text-lg mb-2 flex items-center gap-1">
+                                    <span>${q.itemA.char}</span>
+                                    <span>${q.itemA.name}</span>
+                                </div>
+                                <div class="scatter-box w-full shadow-inner">
+                                    ${generateIrregularScatteredEmojis(q.countA, q.itemA.char)}
+                                </div>
+                            </div>
+                            <!-- Item B Box -->
+                            <div class="bg-sky-50/80 border-2 border-sky-300 rounded-2xl p-4 flex flex-col items-center">
+                                <div class="font-extrabold text-sky-900 text-lg mb-2 flex items-center gap-1">
+                                    <span>${q.itemB.char}</span>
+                                    <span>${q.itemB.name}</span>
+                                </div>
+                                <div class="scatter-box w-full shadow-inner bg-sky-50/40 border-sky-200">
+                                    ${generateIrregularScatteredEmojis(q.countB, q.itemB.char)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Answer Choices for Type 2 (Selecting Item A or Item B) -->
+                        <div class="grid grid-cols-2 gap-4 sm:gap-6">
+                            ${q.options.map((opt) => `
+                                <button onclick="selectOption(${index}, '${opt.value}')" 
+                                        id="opt-${index}-${opt.value}" 
+                                        class="option-btn py-4 text-xl sm:text-2xl font-black text-gray-800 text-center flex items-center justify-center gap-2">
+                                    ${opt.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                } else if (q.type === 3) {
+                    // Type 3: Scenario Question with Picture Cards
+                    innerHTML += `
+                        <!-- Scenario Graphic Cards -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                            <!-- Card 1: Actors -->
+                            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-4 flex flex-col items-center">
+                                <div class="font-extrabold text-indigo-900 text-lg mb-2 flex items-center gap-1">
+                                    <span>${q.scenario.actorIcon}</span>
+                                    <span>${q.scenario.actorName} ( ${q.kidsCount} 位 )</span>
+                                </div>
+                                <div class="scatter-box w-full shadow-inner bg-white/80 border-indigo-200">
+                                    ${generateIrregularScatteredEmojis(q.kidsCount, q.scenario.actorIcon)}
+                                </div>
+                            </div>
+
+                            <!-- Card 2: Items -->
+                            <div class="bg-emerald-50 border-2 border-emerald-200 rounded-2xl p-4 flex flex-col items-center">
+                                <div class="font-extrabold text-emerald-900 text-lg mb-2 flex items-center gap-1">
+                                    <span>${q.scenario.itemIcon}</span>
+                                    <span>${q.scenario.itemName} ( ${q.itemsCount} 個 )</span>
+                                </div>
+                                <div class="scatter-box w-full shadow-inner bg-white/80 border-emerald-200">
+                                    ${generateIrregularScatteredEmojis(q.itemsCount, q.scenario.itemIcon)}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Answer Buttons for Type 3 -->
+                        <div class="grid grid-cols-2 gap-4 sm:gap-6 my-4">
+                            ${q.options.map((opt) => `
+                                <button onclick="selectOption(${index}, '${opt.value}')" 
+                                        id="opt-${index}-${opt.value}" 
+                                        class="option-btn py-5 text-2xl sm:text-3xl font-black text-gray-800 text-center">
+                                    ${opt.label}
+                                </button>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                // Explanation Box (Hidden before submit)
+                innerHTML += `
+                    <div id="explanation-${index}" class="hidden mt-4 p-4 rounded-2xl bg-slate-100 border-2 border-slate-200 text-slate-700 text-base font-bold">
+                        <div class="flex items-center gap-2 text-indigo-600 font-extrabold mb-1">
+                            <span>💡 解析說明：</span>
+                        </div>
+                        <div>${q.explanation}</div>
+                    </div>
+                `;
+
+                card.innerHTML = innerHTML;
+                container.appendChild(card);
+            });
+        }
+
+
+        // Generate irregular scatter effect using dynamic rotations, scales, margins and positional offsets
+        function generateIrregularScatteredEmojis(count, emojiChar) {
+            let html = "";
+            for (let i = 0; i < count; i++) {
+                // Playful scattering values
+                const rotateDeg = getRandomInt(-28, 28);
+                const scale = (getRandomInt(85, 120) / 100).toFixed(2);
+                const marginTop = getRandomInt(-4, 6);
+                const marginLeft = getRandomInt(-2, 6);
+                const size = getRandomInt(26, 34); // slight size variation for depth
+
+                html += `<span class="scatter-item" style="font-size: ${size}px; transform: rotate(${rotateDeg}deg) scale(${scale}); margin-top: ${marginTop}px; margin-left: ${marginLeft}px;">${emojiChar}</span>`;
+            }
+            return html;
+        }
+
+
+        function selectOption(questionIndex, value) {
+            if (isSubmitted) return; // Lock if already submitted
+
+            userAnswers[questionIndex] = value;
+
+            // Clear selected state from all options in this question
+            const card = document.getElementById(`question-card-${questionIndex}`);
+            const buttons = card.querySelectorAll(".option-btn");
+            buttons.forEach(btn => btn.classList.remove("selected"));
+
+            // Add selected state to clicked button
+            const selectedBtn = document.getElementById(`opt-${questionIndex}-${value}`);
+            if (selectedBtn) {
+                selectedBtn.classList.add("selected");
+            }
+        }
+
+
+        function submitAnswers() {
+            // Check if all questions are answered
+            const unanswered = userAnswers.map((ans, idx) => ans === null ? idx + 1 : null).filter(val => val !== null);
+            if (unanswered.length > 0) {
+                showToast(`還有第 ${unanswered.join(", ")} 題還沒回答喔！請先完成所有題目！`);
+                return;
+            }
+
+            isSubmitted = true;
+            let score = 0;
+
+            // Evaluate each question
+            questionsData.forEach((q, index) => {
+                const userAns = userAnswers[index];
+                const card = document.getElementById(`question-card-${index}`);
+                const options = card.querySelectorAll(".option-btn");
+
+                // Disable all option buttons
+                options.forEach(btn => btn.classList.add("disabled"));
+
+                // Show correct and wrong styling
+                options.forEach(btn => {
+                    btn.classList.remove("selected");
+                });
+
+                const userBtn = document.getElementById(`opt-${index}-${userAns}`);
+                const correctBtn = document.getElementById(`opt-${index}-${q.correctAnswer}`);
+
+                if (userAns === q.correctAnswer) {
+                    score++;
+                    if (userBtn) userBtn.classList.add("correct-ans");
+                } else {
+                    if (userBtn) userBtn.classList.add("wrong-ans");
+                    if (correctBtn) correctBtn.classList.add("correct-ans");
+                }
+
+                // Show explanation
+                const expl = document.getElementById(`explanation-${index}`);
+                if (expl) expl.classList.remove("hidden");
+            });
+
+            // Display Results Card
+            const resultCard = document.getElementById("result-card");
+            const scoreDisplay = document.getElementById("score-display");
+            const feedback = document.getElementById("result-feedback");
+            const submitBtn = document.getElementById("submit-btn");
+
+            submitBtn.classList.add("hidden");
+            resultCard.classList.remove("hidden");
+            scoreDisplay.textContent = `${score} / 3`;
+
+            // Feedback messages
+            if (score === 3) {
+                feedback.innerHTML = "🌟 太棒了！答對了全部題目，你是數學大師！ 🏆";
+                triggerConfetti();
+            } else if (score === 2) {
+                feedback.innerHTML = "👍 很不錯喔！答對了 2 題，再接再厲一定能拿滿分！ 💪";
+            } else if (score === 1) {
+                feedback.innerHTML = "😊 答對了 1 題！看一看下面的解析，下次會更好！ 🌱";
+            } else {
+                feedback.innerHTML = "🎈 沒關係，失敗是成功之母！認真看看解析再挑戰一次吧！ ☀️";
+            }
+
+            // Scroll down smoothly to results
+            resultCard.scrollIntoView({ behavior: 'smooth' });
+        }
+
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                const count = 200;
+                const defaults = { origin: { y: 0.7 } };
+
+                function fire(particleRatio, opts) {
+                    confetti(Object.assign({}, defaults, opts, {
+                        particleCount: Math.floor(count * particleRatio)
+                    }));
+                }
+
+                fire(0.25, { spread: 26, startVelocity: 55 });
+                fire(0.2, { spread: 60 });
+                fire(0.35, { spread: 100, decay: 0.91, scalar: 0.8 });
+                fire(0.1, { spread: 120, startVelocity: 25, decay: 0.92, scalar: 1.2 });
+                fire(0.1, { spread: 120, startVelocity: 45 });
+            }
+        }
+
+        function resetQuiz() {
+            // Hide result card, show submit button
+            document.getElementById("result-card").classList.add("hidden");
+            document.getElementById("submit-btn").classList.remove("hidden");
+
+            // Regenerate and render new questions
+            generateQuestions();
+            renderQuestions();
+
+            // Scroll back to top smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Custom Friendly Toast Message instead of alert()
+        function showToast(message) {
+            let toast = document.getElementById("custom-toast");
+            if (!toast) {
+                toast = document.createElement("div");
+                toast.id = "custom-toast";
+                toast.className = "fixed top-6 left-1/2 transform -translate-x-1/2 bg-rose-500 text-white font-extrabold px-6 py-3 rounded-full shadow-2xl z-50 transition-all duration-300 opacity-0 text-lg border-2 border-white flex items-center gap-2";
+                document.body.appendChild(toast);
+            }
+
+            toast.innerHTML = `⚠️ ${message}`;
+            toast.classList.remove("opacity-0");
+            toast.classList.add("opacity-100");
+
+            setTimeout(() => {
+                toast.classList.remove("opacity-100");
+                toast.classList.add("opacity-0");
+            }, 3000);
+        }
+
+        window.onload = function() {
+            generateQuestions();
+            renderQuestions();
+        };
+    </script>
+</body>
+</html>
